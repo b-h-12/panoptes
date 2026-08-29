@@ -1,0 +1,20 @@
+# Go build output
+/cli/monictl
+/cli/*.exe
+/cli/*.test
+
+# Secrets / local overrides — see Step 6
+.env
+*.env.local
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs from local debugging
+*.log
