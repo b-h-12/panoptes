@@ -54,6 +54,14 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
 
+  cli:
+    build: ./cli
+    volumes:
+      - ./prometheus/targets:/etc/prometheus/targets
+      - ./prometheus/rules:/etc/prometheus/rules
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+
 volumes:
   prometheus_data:
   alertmanager_data:
