@@ -71,7 +71,7 @@ func Remove(path, name string) (bool, error) {
 		return false, err
 	}
 
-	var kept []Group
+	kept := []Group{}
 	removed := false
 	for _, g := range groups {
 		if g.Labels["instance_name"] == name {
