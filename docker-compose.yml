@@ -61,6 +61,7 @@ services:
       - ./prometheus/rules:/etc/prometheus/rules
     environment:
       - PROMETHEUS_URL=http://prometheus:9090
+      - TARGETS_DIR=/etc/prometheus/targets
 
 volumes:
   prometheus_data:
