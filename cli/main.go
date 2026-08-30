@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"monictl/internal/prom"
-	"monictl/internal/rules"
-	"monictl/internal/targets"
+	"panoptes/internal/prom"
+	"panoptes/internal/rules"
+	"panoptes/internal/targets"
 )
 
 var targetsDir = envOr("TARGETS_DIR", "/etc/prometheus/targets")
@@ -30,7 +30,7 @@ func main() {
 
 	if os.Args[1] == "reload" {
 		if err := reloadPrometheus(); err != nil {
-			fmt.Fprintln(os.Stderr, "monictl:", err)
+			fmt.Fprintln(os.Stderr, "panoptes:", err)
 			os.Exit(1)
 		}
 		return
@@ -63,20 +63,20 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "monictl:", err)
+		fmt.Fprintln(os.Stderr, "panoptes:", err)
 		os.Exit(1)
 	}
 }
 
 func usage() {
 	fmt.Fprintln(os.Stderr, `usage:
-  monictl add target --type <kind> --name <friendly-name> --address <host:port>
-  monictl list targets [--type <kind>]
-  monictl remove target --type <kind> --name <friendly-name>
-  monictl add rule --name <friendly-name> [--for <duration>] [--severity <sev>]
-  monictl list rules
-  monictl remove rule --type <kind> --name <friendly-name>
-  monictl reload`)
+  panoptes add target --type <kind> --name <friendly-name> --address <host:port>
+  panoptes list targets [--type <kind>]
+  panoptes remove target --type <kind> --name <friendly-name>
+  panoptes add rule --name <friendly-name> [--for <duration>] [--severity <sev>]
+  panoptes list rules
+  panoptes remove rule --type <kind> --name <friendly-name>
+  panoptes reload`)
 }
 
 func addTarget(args []string) error {

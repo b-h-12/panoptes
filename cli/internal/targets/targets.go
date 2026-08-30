@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"monictl/internal/atomicfile"
+	"panoptes/internal/atomicfile"
 )
 
 type Group struct {

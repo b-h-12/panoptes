@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"monictl/internal/atomicfile"
+	"panoptes/internal/atomicfile"
 )
 
 type Rule struct {

@@ -1,5 +1,5 @@
 # Go build output
-/cli/monictl
+/cli/panoptes
 /cli/*.exe
 /cli/*.test
 
