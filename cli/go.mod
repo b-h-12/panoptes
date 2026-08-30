@@ -1,3 +1,3 @@
-module monictl
+module panoptes
 
 go 1.23

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
-	"monictl/internal/atomicfile"
+	"panoptes/internal/atomicfile"
 )
 
 type Group struct {
@@ -84,4 +86,23 @@ func Remove(path, name string) (bool, error) {
 		return false, nil
 	}
 	return true, Save(path, kept)
+}
+
+func FindByName(dir, name string) (group Group, targetType string, err error) {
+	matches, err := filepath.Glob(filepath.Join(dir, "*.json"))
+	if err != nil {
+		return Group{}, "", err
+	}
+	for _, path := range matches {
+		groups, err := Load(path)
+		if err != nil {
+			return Group{}, "", err
+		}
+		for _, g := range groups {
+			if g.Labels["instance_name"] == name {
+				return g, strings.TrimSuffix(filepath.Base(path), ".json"), nil
+			}
+		}
+	}
+	return Group{}, "", fmt.Errorf("no target named %q found in %s", name, dir)
 }

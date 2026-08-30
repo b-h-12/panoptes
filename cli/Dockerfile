@@ -3,8 +3,8 @@ WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /out/monictl .
+RUN CGO_ENABLED=0 go build -o /out/panoptes .
 
 FROM alpine:3.20
-COPY --from=build /out/monictl /usr/local/bin/monictl
-ENTRYPOINT ["monictl"]
+COPY --from=build /out/panoptes /usr/local/bin/panoptes
+ENTRYPOINT ["panoptes"]
