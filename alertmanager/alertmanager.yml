@@ -10,7 +10,7 @@ route:
   routes:
     - matchers:
         - severity="critical"
-      receiver: default-null
+      receiver: paged
       group_wait: 10s
       group_interval: 1m
       repeat_interval: 1h
@@ -23,3 +23,7 @@ route:
 
 receivers:
   - name: default-null
+  - name: paged
+    webhook_configs:
+      - url: http://ntfy-adapter:8080/
+        send_resolved: true

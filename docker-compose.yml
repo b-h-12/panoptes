@@ -65,6 +65,11 @@ services:
       - TARGETS_DIR=/etc/prometheus/targets
       - RULES_DIR=/etc/prometheus/rules
 
+  ntfy-adapter:
+    build: ./ntfy-adapter
+    environment:
+      - NTFY_TOPIC=${NTFY_TOPIC}
+
 volumes:
   prometheus_data:
   alertmanager_data:
