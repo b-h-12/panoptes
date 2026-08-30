@@ -64,6 +64,24 @@ func Add(dir string, r Rule) (string, error) {
 	return path, nil
 }
 
+func List(dir string) ([]Rule, error) {
+	matches, err := filepath.Glob(filepath.Join(dir, "*.yml"))
+	if err != nil {
+		return nil, err
+	}
+
+	rules := make([]Rule, 0, len(matches))
+	for _, path := range matches {
+		base := strings.TrimSuffix(filepath.Base(path), ".yml")
+		job, instanceName, ok := strings.Cut(base, "__")
+		if !ok {
+			continue
+		}
+		rules = append(rules, Rule{Job: job, InstanceName: instanceName})
+	}
+	return rules, nil
+}
+
 func Remove(dir, job, instanceName string) (bool, error) {
 	path := Path(dir, Rule{Job: job, InstanceName: instanceName})
 	if err := os.Remove(path); err != nil {
