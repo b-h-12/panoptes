@@ -12,13 +12,17 @@ severity — from there it reaches a real page (PagerDuty), a chat
 channel (Slack), and a push notification (ntfy), all from one alert.
 Grafana sits on top with a couple of live panels.
 
+See [docs/USAGE.md](docs/USAGE.md) for the full CLI reference, the
+on-disk file formats, the alerting pipeline in detail, and
+troubleshooting — this README stays focused on setup.
+
 ## Stack
 
 - **Prometheus** — scrapes targets, evaluates alert rules
 - **Alertmanager** — receives firing alerts, groups and routes them by
   severity, and fans critical alerts out to PagerDuty, Slack, and ntfy
-- **Grafana** — a provisioned dashboard (target up/down, CPU usage)
-  reading from Prometheus
+- **Grafana** — a provisioned dashboard (target up/down, CPU/memory/disk
+  usage, an active-alerts table) reading from Prometheus
 - **node_exporter** — the one thing being monitored out of the box, on
   host networking so it sees real host metrics
 - **panoptes** (`cli/`) — a Go binary that adds/lists/removes targets
@@ -181,7 +185,7 @@ prometheus/prometheus.yml           scrape config, points at targets/ and rules/
 prometheus/targets/                 target files the CLI writes (file_sd)
 prometheus/rules/                   alert rule files the CLI writes
 grafana/provisioning/               datasource + dashboard-provider config
-grafana/dashboards/                 dashboard JSON (target up/down, CPU %)
+grafana/dashboards/                 dashboard JSON (target up/down, CPU/memory/disk %, active alerts)
 cli/main.go                         command dispatch
 cli/internal/targets/               target file read/modify/write
 cli/internal/rules/                 rule file read/modify/write
