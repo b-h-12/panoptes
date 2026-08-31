@@ -2,6 +2,7 @@ package rules
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,18 +12,37 @@ import (
 )
 
 type Rule struct {
-	Job          string
-	InstanceName string
-	Expr         string
-	For          string
-	Severity     string
+	Job               string
+	InstanceName      string
+	Expr              string
+	For               string
+	Severity          string
+	AlertNameOverride string
+	Summary           string
 }
 
 func (r Rule) AlertName() string {
+	if r.AlertNameOverride != "" {
+		return r.AlertNameOverride
+	}
 	if r.Job == "" {
 		return "Down"
 	}
 	return strings.ToUpper(r.Job[:1]) + r.Job[1:] + "Down"
+}
+
+func (r Rule) SummaryText() string {
+	if r.Summary != "" {
+		return r.Summary
+	}
+	return fmt.Sprintf("%s target %s is down", r.Job, r.InstanceName)
+}
+
+func (r Rule) DescriptionText() string {
+	if r.Summary != "" {
+		return fmt.Sprintf("%s (condition has held for more than %s).", r.Summary, r.For)
+	}
+	return fmt.Sprintf("Target %s has been unreachable for more than %s.", r.InstanceName, r.For)
 }
 
 var tmpl = template.Must(template.New("rule").Parse(`groups:
@@ -36,8 +56,8 @@ var tmpl = template.Must(template.New("rule").Parse(`groups:
           kind: {{.Job}}
           instance_name: {{.InstanceName}}
         annotations:
-          summary: "{{.Job}} target {{.InstanceName}} is down"
-          description: "Target {{.InstanceName}} has been unreachable for more than {{.For}}."
+          summary: "{{.SummaryText}}"
+          description: "{{.DescriptionText}}"
 `))
 
 func Path(dir string, r Rule) string {

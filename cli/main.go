@@ -73,7 +73,7 @@ func usage() {
   panoptes add target --type <kind> --name <friendly-name> --address <host:port>
   panoptes list targets [--type <kind>]
   panoptes remove target --type <kind> --name <friendly-name>
-  panoptes add rule --name <friendly-name> [--for <duration>] [--severity <sev>]
+  panoptes add rule --name <friendly-name> [--expr <promql>] [--alert-name <name>] [--summary <text>] [--for <duration>] [--severity <sev>]
   panoptes list rules
   panoptes remove rule --type <kind> --name <friendly-name>
   panoptes reload`)
@@ -153,8 +153,11 @@ func removeTarget(args []string) error {
 func addRule(args []string) error {
 	fs := flag.NewFlagSet("add rule", flag.ExitOnError)
 	name := fs.String("name", "", "friendly instance name (must already exist as a target)")
-	forDuration := fs.String("for", "2m", "how long the target must be down before firing")
+	forDuration := fs.String("for", "2m", "how long the condition must hold before firing")
 	severity := fs.String("severity", "critical", "alert severity")
+	expr := fs.String("expr", "", `custom PromQL expression (default: up{instance_name="<name>"} == 0)`)
+	alertName := fs.String("alert-name", "", "override the alert name (default: <Job>Down)")
+	summary := fs.String("summary", "", `override the annotation summary (default: "<job> target <name> is down")`)
 	fs.Parse(args)
 
 	if *name == "" {
@@ -166,12 +169,19 @@ func addRule(args []string) error {
 		return err
 	}
 
+	ruleExpr := *expr
+	if ruleExpr == "" {
+		ruleExpr = fmt.Sprintf(`up{instance_name=%q} == 0`, *name)
+	}
+
 	rule := rules.Rule{
-		Job:          job,
-		InstanceName: *name,
-		Expr:         fmt.Sprintf(`up{instance_name=%q} == 0`, *name),
-		For:          *forDuration,
-		Severity:     *severity,
+		Job:               job,
+		InstanceName:      *name,
+		Expr:              ruleExpr,
+		For:               *forDuration,
+		Severity:          *severity,
+		AlertNameOverride: *alertName,
+		Summary:           *summary,
 	}
 
 	path, err := rules.Add(rulesDir, rule)
