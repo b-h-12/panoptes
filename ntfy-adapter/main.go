@@ -76,40 +76,54 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func publish(a alert) error {
+type notification struct {
+	title    string
+	priority string
+	tags     string
+	message  string
+}
+
+func buildNotification(a alert) notification {
 	firing := a.Status == "firing"
 	severity := a.Labels["severity"]
 	alertname := a.Labels["alertname"]
 	instanceName := a.Labels["instance_name"]
 
-	title := fmt.Sprintf("%s resolved", alertname)
-	priority := "default"
-	tags := "white_check_mark"
+	n := notification{
+		title:    fmt.Sprintf("%s resolved", alertname),
+		priority: "default",
+		tags:     "white_check_mark",
+		message:  fmt.Sprintf("%s has recovered", instanceName),
+	}
+
 	if firing {
-		title = alertname
-		priority = "default"
-		tags = "warning"
+		n.title = alertname
+		n.priority = "default"
+		n.tags = "warning"
 		if severity == "critical" {
-			priority = "urgent"
-			tags = "rotating_light"
+			n.priority = "urgent"
+			n.tags = "rotating_light"
+		}
+
+		n.message = a.Annotations["summary"]
+		if n.message == "" {
+			n.message = fmt.Sprintf("%s is %s", instanceName, a.Status)
 		}
 	}
 
-	message := a.Annotations["summary"]
-	if message == "" {
-		message = fmt.Sprintf("%s is %s", instanceName, a.Status)
-	}
-	if !firing {
-		message = fmt.Sprintf("%s has recovered", instanceName)
-	}
+	return n
+}
 
-	req, err := http.NewRequest(http.MethodPost, ntfyURL+"/"+ntfyTopic, strings.NewReader(message))
+func publish(a alert) error {
+	n := buildNotification(a)
+
+	req, err := http.NewRequest(http.MethodPost, ntfyURL+"/"+ntfyTopic, strings.NewReader(n.message))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Title", title)
-	req.Header.Set("Priority", priority)
-	req.Header.Set("Tags", tags)
+	req.Header.Set("Title", n.title)
+	req.Header.Set("Priority", n.priority)
+	req.Header.Set("Tags", n.tags)
 
 	resp, err := client.Do(req)
 	if err != nil {
