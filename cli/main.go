@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"panoptes/internal/checks"
 	"panoptes/internal/prom"
 	"panoptes/internal/rules"
 	"panoptes/internal/targets"
@@ -73,7 +75,7 @@ func usage() {
   panoptes add target --type <kind> --name <friendly-name> --address <host:port>
   panoptes list targets [--type <kind>]
   panoptes remove target --type <kind> --name <friendly-name>
-  panoptes add rule --name <friendly-name> [--expr <promql>] [--alert-name <name>] [--summary <text>] [--for <duration>] [--severity <sev>]
+  panoptes add rule --name <friendly-name> [--expr <promql> | --check <cpu|memory|disk> --above <percent>] [--alert-name <name>] [--summary <text>] [--for <duration>] [--severity <sev>]
   panoptes list rules
   panoptes remove rule --type <kind> --name <friendly-name>
   panoptes reload`)
@@ -156,12 +158,20 @@ func addRule(args []string) error {
 	forDuration := fs.String("for", "2m", "how long the condition must hold before firing")
 	severity := fs.String("severity", "critical", "alert severity")
 	expr := fs.String("expr", "", `custom PromQL expression (default: up{instance_name="<name>"} == 0)`)
-	alertName := fs.String("alert-name", "", "override the alert name (default: <Job>Down)")
-	summary := fs.String("summary", "", `override the annotation summary (default: "<job> target <name> is down")`)
+	check := fs.String("check", "", "named check instead of --expr: "+strings.Join(checks.Names(), ", "))
+	above := fs.Float64("above", 0, "threshold percent the check must exceed (required with --check)")
+	alertName := fs.String("alert-name", "", "override the alert name (default: <Job>Down, or the check's default)")
+	summary := fs.String("summary", "", `override the annotation summary (default: "<job> target <name> is down", or the check's default)`)
 	fs.Parse(args)
 
 	if *name == "" {
 		return fmt.Errorf("--name is required")
+	}
+	if *expr != "" && *check != "" {
+		return fmt.Errorf("--expr and --check are mutually exclusive")
+	}
+	if *check != "" && *above == 0 {
+		return fmt.Errorf("--above is required with --check")
 	}
 
 	_, job, err := targets.FindByName(targetsDir, *name)
@@ -170,6 +180,23 @@ func addRule(args []string) error {
 	}
 
 	ruleExpr := *expr
+	ruleAlertName := *alertName
+	ruleSummary := *summary
+
+	if *check != "" {
+		c, err := checks.Build(*check, *name, *above)
+		if err != nil {
+			return err
+		}
+		ruleExpr = c.Expr
+		if ruleAlertName == "" {
+			ruleAlertName = c.AlertName
+		}
+		if ruleSummary == "" {
+			ruleSummary = c.Summary
+		}
+	}
+
 	if ruleExpr == "" {
 		ruleExpr = fmt.Sprintf(`up{instance_name=%q} == 0`, *name)
 	}
@@ -180,8 +207,8 @@ func addRule(args []string) error {
 		Expr:              ruleExpr,
 		For:               *forDuration,
 		Severity:          *severity,
-		AlertNameOverride: *alertName,
-		Summary:           *summary,
+		AlertNameOverride: ruleAlertName,
+		Summary:           ruleSummary,
 	}
 
 	path, err := rules.Add(rulesDir, rule)
