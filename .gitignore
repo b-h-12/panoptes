@@ -19,3 +19,6 @@ Thumbs.db
 
 # Logs from local debugging
 *.log
+
+# CLI's flock sentinel file (created next to prometheus/targets/*.json)
+/prometheus/targets/*.lock
