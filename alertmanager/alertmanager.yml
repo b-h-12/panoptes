@@ -27,3 +27,6 @@ receivers:
     webhook_configs:
       - url: http://ntfy-adapter:8080/
         send_resolved: true
+    pagerduty_configs:
+      - routing_key_file: /etc/alertmanager/secrets/pagerduty_routing_key
+        send_resolved: true
