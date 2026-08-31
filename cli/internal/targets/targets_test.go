@@ -105,8 +105,8 @@ func TestRemoveLastTargetLeavesEmptyArrayNotNull(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reading file: %v", err)
 	}
-	if string(raw) != "[]" {
-		t.Errorf("got file content %q, want %q (must not be null)", raw, "[]")
+	if string(raw) != "[]\n" {
+		t.Errorf("got file content %q, want %q (must not be null)", raw, "[]\n")
 	}
 }
 
