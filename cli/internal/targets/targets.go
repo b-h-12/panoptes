@@ -35,6 +35,7 @@ func Save(path string, groups []Group) error {
 	if err != nil {
 		return err
 	}
+	data = append(data, '\n')
 	return atomicfile.Write(path, data, 0o644)
 }
 
