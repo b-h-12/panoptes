@@ -58,6 +58,7 @@ services:
 
   cli:
     build: ./cli
+    profiles: ["tools"]
     volumes:
       - ./prometheus/targets:/etc/prometheus/targets
       - ./prometheus/rules:/etc/prometheus/rules
